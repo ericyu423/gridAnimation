@@ -10,59 +10,55 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    var selectedcellV: UIView?
-    var cells = [String: UIView]()//key,view
+
+    var selectV: UIView?
+    var cells = [String: UIView]()
+    
     var width: CGFloat {
         get {
             return view.frame.width * 0.05
         }
         set
         {
-            displayBlocks()//rotation changes width
+            displayBlocks()// upon rotation redraw, this is probably not the best way to do fix it later
         }
     }
-    
-    var numViewPerRow: Int {
+    var viewPerRow: Int {
         return Int(view.frame.width / width)
     }
     
-    var numViewPerColum: Int {
+    var viewPerCol: Int {
         return Int(view.frame.height / width)
     }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         displayBlocks()
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        DispatchQueue.main.async() {
+            self.width = self.view.bounds.size.width
+        }
+    }
+    
     func displayBlocks(){
-        
-        for j in 0...numViewPerColum{
-            for i in 0...numViewPerRow{
-                let squareV = UIView()
-                squareV.backgroundColor = randomColor()
-                //squareV.frame = CGRect(x: CGFloat(i) * width, y:
-                //  CGFloat(j) * width, width: width, height: width)
-                squareV.layer.borderColor = UIColor.black.cgColor
-                squareV.layer.borderWidth = 0.5
-                view.addSubview(squareV)
+        for j in 0...viewPerCol{
+            for i in 0...viewPerRow{
+                let v = UIView()
+                view.addSubview(v)
+                v.backgroundColor = self.randomColor()
+                v.layer.borderColor = UIColor.black.cgColor
+                v.layer.borderWidth = 0.5
                 
                 let key = "\(i)|\(j)"
-                //cells[key] = squareV
+               
+                cells.updateValue(v, forKey: key)
                 
-                cells.updateValue(squareV, forKey: key)
-                
-                squareV.anchor(top:view.topAnchor, left: view.leftAnchor, bottom: nil,right: nil, paddingTop: CGFloat(j) * width, paddingLeft: CGFloat(i) * width, paddingBottom: 0, paddingRight: 0, width: width, height: width)
+                v.anchor(top:view.topAnchor, left: view.leftAnchor, bottom: nil,right: nil, paddingTop: CGFloat(j) * width, paddingLeft: CGFloat(i) * width, paddingBottom: 0, paddingRight: 0, width: width, height: width)
             }
         }
-
-        /*
-        if UIDevice.current.orientation.isLandscape {
-
-        } else {
-            
-        }*/
-        
         view.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture)))
     }
     
@@ -76,14 +72,14 @@ class ViewController: UIViewController {
         let key = "\(i)|\(j)"
         guard let cellV = cells[key] else {return}
         
-        if selectedcellV != cellV {
-            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
-                self.selectedcellV?.layer.transform = CATransform3DIdentity
-            }, completion: nil)
+        if selectV != cellV {
             
+            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+                self.selectV?.layer.transform = CATransform3DIdentity
+            }, completion: nil)
         }
-        
-        selectedcellV = cellV
+
+        selectV = cellV
         view.bringSubview(toFront: cellV)
         
         UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
@@ -92,18 +88,17 @@ class ViewController: UIViewController {
         
         if gesture.state == .ended {
             UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
-                self.selectedcellV?.layer.transform = CATransform3DIdentity
+                self.selectV?.layer.transform = CATransform3DIdentity
             }, completion: nil)
         }
         
     }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        DispatchQueue.main.async() {
-            self.width = self.view.bounds.size.width
-        }
-    }
-    
+}
+
+
+
+extension ViewController {
+   
     fileprivate func randomColor() -> UIColor {
         let red = CGFloat(drand48())
         let green = CGFloat(drand48())
